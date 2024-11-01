@@ -139,15 +139,17 @@ interface InsertPageOptions {
   contentUrl: string
   folderId: number
   screenshotId?: string
+  pureHtmlContentUrl?: string
+  mdContentUrl?: string
 }
 
 async function insertPage(DB: D1Database, pageOptions: InsertPageOptions) {
-  const { title, pageDesc, pageUrl, contentUrl, folderId, screenshotId = null } = pageOptions
+  const { title, pageDesc, pageUrl, contentUrl, folderId, screenshotId = null, pureHtmlContentUrl = null, mdContentUrl = null } = pageOptions
   const insertResult = await DB
     .prepare(
-      'INSERT INTO pages (title, pageDesc, pageUrl, contentUrl, folderId, screenshotId) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO pages (title, pageDesc, pageUrl, contentUrl, folderId, screenshotId, pureHtmlContentUrl, mdContentUrl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     )
-    .bind(title, pageDesc, pageUrl, contentUrl, folderId, screenshotId)
+    .bind(title, pageDesc, pageUrl, contentUrl, folderId, screenshotId, pureHtmlContentUrl, mdContentUrl)
     .run()
   return insertResult.success
 }

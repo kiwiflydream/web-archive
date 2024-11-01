@@ -8,6 +8,7 @@ import { getFolderById, restoreFolder } from '~/model/folder'
 import { getFileFromBucket, saveFileToBucket } from '~/utils/file'
 import type { Page } from '~/sql/types'
 import { updateShowcase } from '~/model/showcase'
+import { getPureHtmlContent, htmlToMd } from '~/utils/parse'
 
 const app = new Hono<HonoTypeUserInformation>()
 
@@ -42,23 +43,34 @@ app.post(
   async (c) => {
     const { title, pageDesc = '', pageUrl, pageFile, folderId, screenshot } = c.req.valid('form')
 
+    // Get html content from file
+    const pureHtmlContent = await getPureHtmlContent(await pageFile.text())
+
+    // Convert to markdown
+    const mdContent = await htmlToMd(pureHtmlContent)
+
     // todo check folder exists?
 
-    const [contentUrl, screenshotId] = await Promise.all([
+    const [contentUrl, screenshotId, pureHtmlContentUrl, mdContentUrl] = await Promise.all([
       saveFileToBucket(c.env.BUCKET, pageFile),
       saveFileToBucket(c.env.BUCKET, screenshot),
+      saveFileToBucket(c.env.BUCKET, pureHtmlContent),
+      saveFileToBucket(c.env.BUCKET, mdContent),
     ])
 
     if (isNil(contentUrl)) {
       return c.json({ status: 'error', message: 'Failed to upload file' })
     }
+
     const insertPageResult = await insertPage(c.env.DB, {
       title,
       pageDesc,
       pageUrl,
       contentUrl,
+      pureHtmlContentUrl,
+      mdContentUrl,
       folderId,
-      screenshotId,
+      screenshotId
     })
     if (insertPageResult) {
       return c.json(result.success(null))
