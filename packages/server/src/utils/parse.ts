@@ -4,10 +4,10 @@ import TurndownService from 'turndown'
 
 export async function getPureHtmlContent(htmlContent: string) {
   // Create virtual DOM
-  const { document } = parseHTML(htmlContent);
+  const dom = parseHTML(htmlContent);
 
   // Parse html to get clean HTML
-  const reader = new Readability(document)
+  const reader = new Readability(dom.document)
   const article = reader.parse()
   return article.content
 }
